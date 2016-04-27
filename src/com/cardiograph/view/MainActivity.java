@@ -16,6 +16,7 @@ import com.cardiograph.control.UserOnClickListener;
 import com.cardiograph.service.UartService;
 import com.cardiograph.util.Tools;
 import com.example.cardiograph.R;
+import com.qihoo.linker.logcollector.LogCollector;
 
 import android.media.AudioManager;
 import android.os.Bundle;
@@ -126,7 +127,7 @@ public class MainActivity extends Activity {
     private int frontMax = 0,frontMin = 0;
     private double t=0;
     //每屏画数据的个数
-    public static int dataNum = 405;
+    public static int dataNum = 406;
     public static String dataDateTime;
 /*    static{
     	System.loadLibrary("JNI_Interface");
@@ -154,6 +155,8 @@ public class MainActivity extends Activity {
 		initView();
 		service_init();
 		registerListener();
+        LogCollector.setDebugMode(true);
+        LogCollector.init(this, "http://121.41.41.54:8801/", null);
 	}
 
 	private void initData() {
@@ -515,13 +518,14 @@ public class MainActivity extends Activity {
 							if (isLoop) {
 								synchronized (this) {
 									BLEDataReceiveHandle1(txValue);
-									if (lstBpm.size() > index) {
+									if (lstBpm.size() > 0) {
 										if (!isDraw) {
 											isDraw = true;
 											System.out.println("+++++++++++++++");
 											//										Tools.getInstance().writer(Environment.getExternalStorageDirectory() + "/data/"+dataDateTime+"lstBpm.txt", lstBpm.get(index));
-											Tools.getInstance().drawWaveform1(MainActivity.this, sfh, lstBpm.get(index));
-											index++;
+											Tools.getInstance().drawWaveform1(MainActivity.this, sfh, lstBpm.get(0));
+											lstBpm.remove(0);
+//											index++;
 //											Tools.getInstance().drawWaveform2(MainActivity.this, sfh, lst);
 //											lst.clear();
 										}
@@ -1061,17 +1065,21 @@ public class MainActivity extends Activity {
 //						new Thread(new Runnable() {
 //							public void run() {
 								for (int j = 1; j < lstCalBpm.size() - 1; j++) {
-									if (avg-lstCalBpm.get(j) > 90 && lstCalBpm.get(j) < lstCalBpm.get(j-1)
+									if (avg-lstCalBpm.get(j) > height*0.5 && lstCalBpm.get(j) < lstCalBpm.get(j-1)
 											&& lstCalBpm.get(j) < lstCalBpm.get(j + 1)) {
-										lstMax.add(j);
+										lstMax.add(j);//添加波峰点的X轴坐标
 									}
 								}
+								//计算一屏波形第一个波峰和最后一个波峰的X轴距离
 								int sum1 = lstMax.get(lstMax.size()-1) - lstMax.get(0);
 //								for (int j = 0; j < lstMax.size() - 1; j++) {
 //									sum1 += lstMax.get(j + 1) - lstMax.get(j);
 //								}
+								//第一个波峰和最后一个波峰间隔的数据点除于完整波形的个数（2个波峰之间才有一个完整波形，所以减1）,等于一个波形所需的平均数据点      
 								count = (int) (sum1 * 1.0 / (lstMax.size() - 1));
-								t = sum1 * 1.0 / (lstMax.size() - 1) / 125;//125采样频率
+								//一个波形所需的数据个数除于采样频率等于一个波形产生所需的时间秒数
+								t = count * 1.0/125;//125采样频率（每秒采集的数据个数）
+								//心率等于1min所跳动的次数，也就是完整波形的个数
 								bpm = (int) (60.0 / t);
 								lstMax = new ArrayList<Integer>();
 								handler.sendEmptyMessage(Constance.MESSAGE_CALCULATE_BPM);
@@ -1083,74 +1091,6 @@ public class MainActivity extends Activity {
 			}
 //		}
 	}
-	
-//	private void BLEDataReceiveHandleBuffer(byte[] txValue) {
-//		synchronized (this) {
-//			int data = 0;
-//			for (int i = 2; i < txValue.length - 2; i++) {
-//				if (i % 3 == 2) {
-//					data = dataParser(txValue[i]);
-//				} else {
-//					data = (data << 8) + dataParser(txValue[i]);
-//				}
-//				if (i % 3 == 1) {
-//					System.out.println("yjx&&" + data);
-//					lstData.add(data);
-//					if (lstData.size() == 216) {
-//						long sum = 0;
-//						min = lstData.get(0);
-//						for (int j = 0; j < lstData.size(); j++) {
-//							sum += lstData.get(j);
-//							min = Math.min(min, lstData.get(j));
-//							max = Math.max(max, lstData.get(j));
-//						}
-//						avg = (int) (sum / 216.0);
-//						sum = 0;
-//						for (int j = 0; j < lstData.size(); j++) {
-//							System.out.println("yjx--" + avg);
-//							if (max - avg > avg - min) {
-//								data = (int) (240 - 180 * 1.0 / (max - min)* (lstData.get(j) - min) - 30);
-//							} else if (max == min && max == avg) {
-//								data = 180;
-//							} else {
-//								data = (int) (180 * 1.0 / (max - min)* (lstData.get(j) - min) + 60 - 30);
-//							}
-//							System.out.println("yjx$$" + data);
-//							lstBuffer.add(data);
-//							sum += data;
-//						}
-//						avg = (int) (sum / 216.0);
-//						max = 0;
-//						new Thread(new Runnable() {
-//							public void run() {
-//								try {
-//									Tools.getInstance().writer("/mnt/sdcard/data.txt", lstData);
-//								} catch (IOException e) {
-//									e.printStackTrace();
-//								}
-//							}
-//						}).start();
-//						lstData = new ArrayList<Integer>();
-//
-//						for (int j = 1; j < lstBuffer.size() - 1; j++) {
-//							if (lstBuffer.get(j) < avg && lstBuffer.get(j) < lstBuffer.get(j-1)
-//									&& lstBuffer.get(j) < lstBuffer.get(j + 1)) {
-//								lstMax.add(j);
-//							}
-//						}
-//						for (int j = 0; j < lstMax.size() - 1; j++) {
-//							sum += lstMax.get(j + 1) - lstMax.get(j);
-//						}
-//						count = (int) (sum * 1.0 / (lstMax.size() - 1));
-//						t = sum * 1.0 / (lstMax.size() - 1) / 125.0;
-//						bpm = (int) (60.0 / t);
-//						tvBPM.setText(bpm + "bpm");
-//						lstMax = new ArrayList<Integer>();
-//					}
-//				}
-//			}
-//		}
-//	}
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {

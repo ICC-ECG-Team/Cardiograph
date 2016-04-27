@@ -31,6 +31,7 @@ import com.cardiograph.constance.Constance;
 import com.cardiograph.view.MainActivity;
 import com.example.cardiograph.R;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -42,6 +43,7 @@ import android.graphics.Paint;
 import android.os.Environment;
 import android.util.DisplayMetrics;
 import android.view.SurfaceHolder;
+import android.widget.Toast;
 
 /************************************************************
  *  ÄÚÈÝÕªÒª	£º<p>
@@ -615,12 +617,15 @@ public class Tools
         p.setAntiAlias(true);
 		p.setStrokeWidth(3);
 		System.out.println("***************yjx");
+		final long startTime = System.currentTimeMillis();
 		new Thread(){
+			private boolean isRunning = true;
 			public void run() {
 //				synchronized(context){
-					int count = 1;
+					int count = 3;
 					int count1= 0;
-					while (MainActivity.isDraw && MainActivity.isLoop) {
+//					while (MainActivity.isDraw && MainActivity.isLoop) {
+					while (isRunning && MainActivity.isLoop) {
 						canvas = sfh.lockCanvas();
 						Paint pg = new Paint(); 
 						pg.setColor(resourse.getColor(R.color.sf_green_grid));
@@ -666,7 +671,7 @@ public class Tools
 								boardCanvas.drawLine(i*(width/405.0f),lstBpm.get(i).intValue(),(i+1)*(width/405.0f),lstBpm.get(i+1).intValue(),p);
 							}
 							count1 = count;
-							count++;
+							count += 3;
 							canvas.drawBitmap(board, 0, 0, null);
 						}else{
 //							try {
@@ -674,7 +679,8 @@ public class Tools
 //							} catch (InterruptedException e) {
 //								e.printStackTrace();
 //							}
-							MainActivity.isDraw = false;
+//							MainActivity.isDraw = false;
+							isRunning = false;
 							//						if(MainActivity.drawflag == Constance.DRAW_LST){
 							//							MainActivity.drawflag = Constance.DRAW_LSTBUFFER;
 							//						}else{
@@ -682,13 +688,23 @@ public class Tools
 							//						}
 						}
 						sfh.unlockCanvasAndPost(canvas);
-/*						try {
-//							Thread.sleep(20);
-							Thread.sleep(0);
+						try {
+							Thread.sleep(6);
+//							Thread.sleep(0);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
-						}*/
+						}
 					}
+					MainActivity.isDraw = false;
+			        final long endTime = System.currentTimeMillis();
+					((Activity)context).runOnUiThread(new Runnable() {
+						
+						@Override
+						public void run() {
+							// TODO Auto-generated method stub
+							Toast.makeText(context, ""+(endTime - startTime), Toast.LENGTH_LONG).show();
+						}
+					});
 					//				MainActivity.isMove = true;
 //				}
 			}
