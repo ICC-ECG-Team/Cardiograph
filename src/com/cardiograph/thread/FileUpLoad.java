@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import org.apache.http.HttpEntity;
@@ -30,7 +29,6 @@ import com.cardiograph.constance.Constance;
 import com.cardiograph.util.PreferencesUtil;
 import com.cardiograph.util.Util;
 import com.cardiograph.view.LoginActivity;
-import com.cardiograph.view.MainActivity;
 
 public class FileUpLoad extends Thread{
 	private String TAG = "FileUpLoad";

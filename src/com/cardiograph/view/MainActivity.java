@@ -1065,7 +1065,7 @@ public class MainActivity extends Activity {
 //						new Thread(new Runnable() {
 //							public void run() {
 								for (int j = 1; j < lstCalBpm.size() - 1; j++) {
-									if (avg-lstCalBpm.get(j) > height*0.5 && lstCalBpm.get(j) < lstCalBpm.get(j-1)
+									if (avg-lstCalBpm.get(j) > height*0.30 && lstCalBpm.get(j) < lstCalBpm.get(j-1)
 											&& lstCalBpm.get(j) < lstCalBpm.get(j + 1)) {
 										lstMax.add(j);//添加波峰点的X轴坐标
 									}
@@ -1080,7 +1080,8 @@ public class MainActivity extends Activity {
 								//一个波形所需的数据个数除于采样频率等于一个波形产生所需的时间秒数
 								t = count * 1.0/125;//125采样频率（每秒采集的数据个数）
 								//心率等于1min所跳动的次数，也就是完整波形的个数
-								bpm = (int) (60.0 / t);
+//								bpm = (int) (60.0 / t);
+								bpm = (int)(100-(t*100+5)+60);
 								lstMax = new ArrayList<Integer>();
 								handler.sendEmptyMessage(Constance.MESSAGE_CALCULATE_BPM);
 //							}
